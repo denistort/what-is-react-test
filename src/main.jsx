@@ -1,0 +1,86 @@
+import './style.css'
+import Api from './api';
+import logoPng from './assets/logo.png';
+import {MyReact} from "./core/React";
+import { h } from 'start-dom-jsx';
+
+let state = {
+	time: new Date(),
+	lots: null
+}
+const api = new Api();
+
+const LoadingDiv = () => {
+	return MyReact.createElement('div', {className: 'loading'}, 'loading')
+}
+
+const Header = () => {
+	return MyReact.createElement('header', {
+		className: 'header',
+		onClick: () => console.log('clicked')
+	}, MyReact.createElement(Logo))
+}
+
+
+const Logo = () => {
+	return MyReact.createElement('img', {className: 'logo', src: logoPng})
+}
+const Clock = ({time}) => {
+	return MyReact.createElement('div', {
+			className: 'clock',
+		},
+		time.toLocaleString())
+}
+const Lot = ({lot}) => {
+	const lotChildren = [
+		MyReact.createElement('div', { className: 'price' }, lot.price),
+		MyReact.createElement('h1', {}, lot.name),
+		MyReact.createElement('p', { className: 'description' }, lot.description)
+	]
+	return MyReact.createElement('article', { className: 'lot', key: lot.id },
+		...lotChildren)
+}
+const Lots = ({lots = []}) => {
+	if (lots === null) {
+		return MyReact.createElement(LoadingDiv)
+	}
+	if (lots.length) {
+		return MyReact.createElement('div', {className: 'lots' }, lots.map(lot => ({
+			type: Lot,
+			props: {lot}
+		})))
+	}
+}
+const App = ({state}) => {
+	const children = [
+		MyReact.createElement(Header),
+		MyReact.createElement(Clock, { time: state.time}),
+		MyReact.createElement(Lots, {lots: state.lots})
+	]
+	return MyReact.createElement('div', { className: 'app' }, ...children)
+}
+
+const getLots = async () => {
+	const lots = await api.get('/lots');
+	state = {
+		...state,
+		lots
+	}
+	renderView()
+}
+const timer = () => {
+	state = {...state, time: new Date()};
+	renderView()
+	setTimeout(timer, 1000)
+}
+
+
+function renderView() {
+	MyReact.render(
+		App({state}),
+		document.querySelector('#root')
+	)
+}
+renderView()
+timer();
+getLots();

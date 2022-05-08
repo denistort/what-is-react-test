@@ -1,0 +1,1 @@
+export { renderWithVirtual } from './sync';
